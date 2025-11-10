@@ -64,7 +64,8 @@ def draw_label(c, code):
 
     # Draw text beneath the barcode
     c.setFont("Helvetica-Bold", 9)
-    text_y = max(VERTICAL_MARGIN_CM * cm / 2, barcode_y - (BARCODE_TEXT_GAP_CM * cm + 0.05 * cm))
+    text_height = c._fontsize * 1.2  # points, add extra spacing margin
+    text_y = max(VERTICAL_MARGIN_CM * cm, barcode_y - BARCODE_TEXT_GAP_CM * cm - text_height)
     c.drawCentredString(label_w / 2, text_y, code)
 
 # Streamlit UI

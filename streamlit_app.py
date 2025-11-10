@@ -79,11 +79,13 @@ def draw_label(c, code, label_x, label_y):
     barcode_x = label_x + (label_w - barcode_w) / 2
     barcode_y = y_cursor - barcode_height
     barcode.drawOn(c, barcode_x, barcode_y)
-    y_cursor = barcode_y - 0.12*cm  # Small gap after barcode
+    gap_after_barcode = 0.12*cm
+    y_cursor = barcode_y - gap_after_barcode  # Small gap after barcode
     
     # Draw code text just beneath the barcode
-    text_y = max(label_y + 0.1*cm, y_cursor)
     c.setFont("Helvetica-Bold", 9)
+    text_height = c._fontsize * 1.2  # points, with extra spacing
+    text_y = max(label_y + 0.1*cm, barcode_y - gap_after_barcode - text_height)
     c.drawCentredString(label_x + label_w/2, text_y, code)
 
 def main():
