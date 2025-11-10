@@ -12,8 +12,12 @@ from reportlab.graphics.barcode import code128
 from reportlab.lib.units import cm
 import os
 import io
-import cairosvg
 import sys
+
+try:
+    import cairosvg
+except ImportError:
+    cairosvg = None
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -96,14 +100,17 @@ class AssetLabelMaker:
             logo_available_height_cm = PAGE_HEIGHT_CM - (2 * VERTICAL_MARGIN_CM) - BARCODE_HEIGHT_CM - BARCODE_TEXT_GAP_CM
             max_logo_height = max(logo_available_height_cm - LOGO_BARCODE_GAP_CM, 0) * cm
             if max_logo_height > 0:
-                if LOGO_FILENAME.lower().endswith(".svg"):
+                logo = None
+                is_svg = LOGO_FILENAME.lower().endswith(".svg")
+                if is_svg and cairosvg is not None:
                     png_bytes = cairosvg.svg2png(url=LOGO_FILENAME)
                     logo = Image.open(io.BytesIO(png_bytes))
-                else:
+                elif not is_svg:
                     logo = Image.open(LOGO_FILENAME)
-                max_logo_w = content_width
-                logo.thumbnail((int(max_logo_w), int(max_logo_height)), Image.LANCZOS)
-                if logo.width > 0 and logo.height > 0:
+
+                if logo is not None:
+                    max_logo_w = content_width
+                    logo.thumbnail((int(max_logo_w), int(max_logo_height)), Image.LANCZOS)
                     logo_path = "_tmp_logo.png"
                     logo.save(logo_path)
                     logo_x = (label_w - logo.width) / 2
