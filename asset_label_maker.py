@@ -1,0 +1,126 @@
+import tkinter as tk
+from tkinter import messagebox
+from tkinter import filedialog
+from PIL import Image, ImageTk
+from reportlab.pdfgen import canvas
+from reportlab.graphics.barcode import code128
+from reportlab.lib.units import cm
+import os
+import io
+import cairosvg
+import sys
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+LOGO_FILENAME = resource_path("Logo.svg")
+PAGE_WIDTH_CM = 5.0
+PAGE_HEIGHT_CM = 2.5
+HORIZONTAL_MARGIN_CM = 0.2
+VERTICAL_MARGIN_CM = 0.15
+LOGO_BARCODE_GAP_CM = 0.1
+BARCODE_TEXT_GAP_CM = 0.1
+BARCODE_HEIGHT_CM = 0.9
+BAR_WIDTH_CM = 0.045
+
+class AssetLabelMaker:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Asset Label Maker")
+        self.code_entries = []
+        self.setup_gui()
+
+    def setup_gui(self):
+        frame = tk.Frame(self.root)
+        frame.pack(padx=10, pady=10)
+
+        self.entries_frame = tk.Frame(frame)
+        self.entries_frame.pack()
+
+        self.add_code_entry()
+
+        btn_frame = tk.Frame(frame)
+        btn_frame.pack(pady=5)
+        tk.Button(btn_frame, text="Agregar código", command=self.add_code_entry).pack(side=tk.LEFT, padx=2)
+        tk.Button(btn_frame, text="Eliminar código", command=self.remove_code_entry).pack(side=tk.LEFT, padx=2)
+        tk.Button(frame, text="Generar PDF", command=self.generate_pdf).pack(pady=10)
+
+    def add_code_entry(self):
+        entry = tk.Entry(self.entries_frame, width=20)
+        entry.pack(pady=2)
+        self.code_entries.append(entry)
+
+    def remove_code_entry(self):
+        if len(self.code_entries) > 1:
+            entry = self.code_entries.pop()
+            entry.destroy()
+
+    def generate_pdf(self):
+        codes = [e.get().strip() for e in self.code_entries if e.get().strip()]
+        if not codes:
+            messagebox.showerror("Error", "Por favor ingrese al menos un código.")
+            return
+        pdf_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("Archivos PDF", "*.pdf")])
+        if not pdf_path:
+            return
+        try:
+            self.create_pdf(pdf_path, codes)
+            messagebox.showinfo("Éxito", f"PDF creado: {pdf_path}")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def create_pdf(self, pdf_path, codes):
+        c = canvas.Canvas(pdf_path, pagesize=(PAGE_WIDTH_CM * cm, PAGE_HEIGHT_CM * cm))
+        for index, code in enumerate(codes):
+            self.draw_label(c, code)
+            if index < len(codes) - 1:
+                c.showPage()
+        c.save()
+
+    def draw_label(self, c, code):
+        label_w, label_h = PAGE_WIDTH_CM * cm, PAGE_HEIGHT_CM * cm
+        content_width = (PAGE_WIDTH_CM - 2 * HORIZONTAL_MARGIN_CM) * cm
+        y_cursor = label_h - VERTICAL_MARGIN_CM * cm
+
+        if os.path.exists(LOGO_FILENAME):
+            logo_available_height_cm = PAGE_HEIGHT_CM - (2 * VERTICAL_MARGIN_CM) - BARCODE_HEIGHT_CM - BARCODE_TEXT_GAP_CM
+            max_logo_height = max(logo_available_height_cm - LOGO_BARCODE_GAP_CM, 0) * cm
+            if max_logo_height > 0:
+                if LOGO_FILENAME.lower().endswith(".svg"):
+                    png_bytes = cairosvg.svg2png(url=LOGO_FILENAME)
+                    logo = Image.open(io.BytesIO(png_bytes))
+                else:
+                    logo = Image.open(LOGO_FILENAME)
+                max_logo_w = content_width
+                logo.thumbnail((int(max_logo_w), int(max_logo_height)), Image.LANCZOS)
+                if logo.width > 0 and logo.height > 0:
+                    logo_path = "_tmp_logo.png"
+                    logo.save(logo_path)
+                    logo_x = (label_w - logo.width) / 2
+                    logo_y = y_cursor - logo.height
+                    c.drawImage(logo_path, logo_x, logo_y, width=logo.width, height=logo.height, mask="auto")
+                    os.remove(logo_path)
+                    y_cursor = logo_y - LOGO_BARCODE_GAP_CM * cm
+
+        barcode_height = BARCODE_HEIGHT_CM * cm
+        barcode = code128.Code128(code, barHeight=barcode_height, barWidth=BAR_WIDTH_CM * cm)
+        barcode_x = (label_w - barcode.width) / 2
+        barcode_y = max(VERTICAL_MARGIN_CM * cm, y_cursor - barcode_height)
+        barcode.drawOn(c, barcode_x, barcode_y)
+
+        c.setFont("Helvetica-Bold", 9)
+        text_y = max(VERTICAL_MARGIN_CM * cm / 2, barcode_y - BARCODE_TEXT_GAP_CM * cm)
+        c.drawCentredString(label_w / 2, text_y, code)
+
+def main():
+    root = tk.Tk()
+    app = AssetLabelMaker(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main() 
