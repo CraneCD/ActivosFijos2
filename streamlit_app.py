@@ -68,7 +68,7 @@ def draw_label(c, code, label_x, label_y):
         logo_y = y_cursor - logo.height
         c.drawImage(logo_path_temp, logo_x, logo_y, width=logo.width, height=logo.height, mask='auto')
         os.remove(logo_path_temp)
-        y_cursor = logo_y - 0.08*cm  # Small gap after logo
+        y_cursor = logo_y - 0.16*cm  # Increased gap after logo
     else:
         y_cursor -= 0.5*cm
     
