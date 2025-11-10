@@ -77,16 +77,22 @@ def draw_label(c, code, label_x, label_y):
     barcode = code128.Code128(code, barHeight=barcode_height, barWidth=0.045*cm, humanReadable=False)
     barcode_w = barcode.width
     barcode_x = label_x + (label_w - barcode_w) / 2
-    barcode_y = y_cursor - barcode_height
-    barcode.drawOn(c, barcode_x, barcode_y)
-    gap_after_barcode = 0.12*cm
-    y_cursor = barcode_y - gap_after_barcode  # Small gap after barcode
     
-    # Draw code text just beneath the barcode
-    c.setFont("Helvetica-Bold", 9)
-    text_height = c._fontsize * 1.2  # points, with extra spacing
-    text_y = max(label_y + 0.1*cm, barcode_y - gap_after_barcode - text_height)
-    c.drawCentredString(label_x + label_w/2, text_y, code)
+    text_font_size = 9
+    bottom_margin = 0.18*cm
+    gap_after_barcode = 0.12*cm
+
+    c.setFont("Helvetica-Bold", text_font_size)
+    text_baseline = label_y + bottom_margin
+    text_top = text_baseline + text_font_size * 0.6
+
+    minimum_barcode_bottom = text_top + gap_after_barcode
+    barcode_y = max(minimum_barcode_bottom, y_cursor - barcode_height)
+    barcode.drawOn(c, barcode_x, barcode_y)
+
+    y_cursor = barcode_y - gap_after_barcode  # update cursor though not used afterwards
+    
+    c.drawCentredString(label_x + label_w/2, text_baseline, code)
 
 def main():
     st.set_page_config(

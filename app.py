@@ -59,14 +59,18 @@ def draw_label(c, code):
     barcode_height = BARCODE_HEIGHT_CM * cm
     barcode = code128.Code128(code, barHeight=barcode_height, barWidth=BAR_WIDTH_CM * cm, humanReadable=False)
     barcode_x = (label_w - barcode.width) / 2
-    barcode_y = max(VERTICAL_MARGIN_CM * cm, y_cursor - barcode_height)
+
+    text_font_size = 9
+    c.setFont("Helvetica-Bold", text_font_size)
+    text_baseline = VERTICAL_MARGIN_CM * cm + text_font_size
+    text_top = text_baseline + text_font_size * 0.6
+
+    minimum_barcode_bottom = text_top + BARCODE_TEXT_GAP_CM * cm
+    barcode_y = max(minimum_barcode_bottom, y_cursor - barcode_height)
     barcode.drawOn(c, barcode_x, barcode_y)
 
-    # Draw text beneath the barcode
-    c.setFont("Helvetica-Bold", 9)
-    text_height = c._fontsize * 1.2  # points, add extra spacing margin
-    text_y = max(VERTICAL_MARGIN_CM * cm, barcode_y - BARCODE_TEXT_GAP_CM * cm - text_height)
-    c.drawCentredString(label_w / 2, text_y, code)
+    # Draw text anchored to bottom margin
+    c.drawCentredString(label_w / 2, text_baseline, code)
 
 # Streamlit UI
 st.title("Activos Fijos Etiquetas 2.0")
