@@ -1,7 +1,12 @@
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import filedialog
-from PIL import Image, ImageTk
+try:
+    import tkinter as tk
+    from tkinter import filedialog, messagebox
+except ImportError:
+    tk = None
+    filedialog = None
+    messagebox = None
+
+from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.graphics.barcode import code128
 from reportlab.lib.units import cm
@@ -118,6 +123,8 @@ class AssetLabelMaker:
         c.drawCentredString(label_w / 2, text_y, code)
 
 def main():
+    if tk is None:
+        raise RuntimeError("Tkinter is not available in this environment.")
     root = tk.Tk()
     app = AssetLabelMaker(root)
     root.mainloop()
