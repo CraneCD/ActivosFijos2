@@ -68,7 +68,7 @@ def draw_label(c, code, label_x, label_y):
         logo_y = y_cursor - logo.height
         c.drawImage(logo_path_temp, logo_x, logo_y, width=logo.width, height=logo.height, mask='auto')
         os.remove(logo_path_temp)
-        y_cursor = logo_y - 0.16*cm  # Increased gap after logo
+        y_cursor = logo_y - 0.2*cm  # Increased gap after logo
     else:
         y_cursor -= 0.5*cm
     
@@ -80,7 +80,7 @@ def draw_label(c, code, label_x, label_y):
     
     text_font_size = 9
     bottom_margin = 0.18*cm
-    gap_after_barcode = 0.12*cm
+    gap_after_barcode = 0.18*cm
 
     c.setFont("Helvetica-Bold", text_font_size)
     text_baseline = label_y + bottom_margin
